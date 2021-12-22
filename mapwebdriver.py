@@ -14,29 +14,62 @@ def clickAnalisisButton():
     menu_analisis_button.send_keys(Keys.ENTER)
     # actions.click(menu_analisis_button).perform()
 
-    drawn_option = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+    drawn_option = wait.until(EC.presence_of_element_located(
         (By.XPATH,
          '//*[@id="__next"]/div/div[2]/div/div[4]/div/div[2]/div/div[2]/button[2]')
     ))
     drawn_option.send_keys(Keys.ENTER)
 
-   
+
 def buttonStartDrawn():
+    
     try:
-        start_drawn_option = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+        start_drawn_option = wait.until(EC.presence_of_element_located(
             (By.XPATH,
-            '//*[@id="__next"]/div/div[2]/div/div[4]/div/div[2]/div/div[3]/button')
+             '//*[@id="__next"]/div/div[2]/div/div[4]/div/div[2]/div/div[3]/button')
         ))
     finally:
-        start_drawn_option.send_keys(Keys.ENTER)
+        #confirmando que realmente precisa clicar
+        if(start_drawn_option.text == "FAÇA O DESENHO"):
+            start_drawn_option.send_keys(Keys.ENTER)
+        else: 
+            pass
+
+
+def clickMapOnly():
     
-        
+    try:
+        test = wait.until(EC.presence_of_element_located(
+        (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[5]/div/div[2]/div[1]/div[3]/button')))
+        actions.click(test).perform()
+    except:
+        test = driver.find_element(By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[4]/div/div/div[1]/div[3]/button')
+        actions.click(test).perform()
+
+def drawnInMap():
+    sleep(3)
+    elmap = driver.find_element(By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[3]/div/div/div/div/div/div[2]/div')
+    #first click
+    actions.move_to_element_with_offset(elmap,200,150).click().perform()
+    #second click
+    actions.move_to_element_with_offset(elmap,200,50).click().perform()
+    
+    #third click
+    actions.move_to_element_with_offset(elmap,300,50).click().perform()
+    #final click
+    actions.double_click().click().perform();
+    sleep(3)
+    
+def collectInformations():
+    #treeLossPct e treeLoss id
+    pass   
+#configs
 driver = webdriver.Firefox(
     executable_path=r'D:\downloads\geckodriver-v0.30.0-win64\geckodriver.exe')
 driver.get("https://www.globalforestwatch.org/map/")
 driver.maximize_window()
 actions = ActionChains(driver)
-
+wait = WebDriverWait(driver,10)
 # define variables in localStorage
 driver.execute_script(
     "window.localStorage.setItem('agreeCookies','true');")
@@ -49,7 +82,7 @@ try:
         (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[1]/div/div/div/ul[1]/li[1]/button')))
     menu_forest_change.send_keys(Keys.ENTER)
     # configure RADD
-    menu_RADD = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+    menu_RADD = wait.until(EC.presence_of_element_located(
         (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[1]/div/div[2]/div/div/div[2]/div[4]/button')))
     menu_RADD.send_keys(Keys.ENTER)
 
@@ -59,6 +92,11 @@ finally:
     sleep(2)
     if(driver.title == "An error occurred"):
         driver.refresh()
+    # buttonStartDrawn()
+    clickMapOnly()
+    drawnInMap()
+    clickMapOnly()
+    collectInformations()
     # pageSource = driver.page_source
     # fileTowrite = open("page_source.html","w");
     # fileTowrite.write(pageSource)
