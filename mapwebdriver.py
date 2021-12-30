@@ -4,6 +4,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.firefox.options import Options
+# from selenium.webdriver.exceptions import [NoSuchElementException()]
 from time import sleep
 
 
@@ -37,7 +39,6 @@ def buttonStartDrawn():
 
 
 def clickMapOnly():
-
     try:
         test = wait.until(EC.presence_of_element_located(
             (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[5]/div/div[2]/div[1]/div[3]/button')))
@@ -49,10 +50,9 @@ def clickMapOnly():
 
 
 def drawnInMap():
-    driver.implicitly_wait(2)
 
-    elmap = driver.find_element(
-        By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[3]/div/div/div/div/div/div[2]/div')
+    elmap = wait.until(EC.presence_of_element_located(
+        (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[3]/div/div/div/div/div/div[2]/div')))
     # first click
     actions.move_to_element_with_offset(elmap, 200, 150).click().perform()
 
@@ -65,30 +65,54 @@ def drawnInMap():
     driver.implicitly_wait(1)
     # final click
     actions.double_click().click().perform()
-    driver.implicitly_wait(1)
-
-    # driver.implicitly_wait(10)
+    driver.implicitly_wait(5)
 
 
 def collectInformations():
-    # treeLossPct e treeLoss id
-    elinformations = wait.until(
-        EC.presence_of_element_located((By.ID, "#treeLossPct")))
+    # treeLossPct informations
+    try:
+        elinformations = wait.until(
+            EC.presence_of_all_elements_located((By.XPATH,'//*[@id="treeLossPct"]')))
+        if(elinformations):
+            print("PCTtext" + elinformations.text)
+        
+    except:
+        print("pct tree loss não existe")
+    finally:
+        pass
+    # tree Loss informations
+    try:
+        elinformations2 = wait.until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[2]')))
+        elinformations2_texto = wait.until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[2]/div[2]')))
+        # elinformations2_grafico = wait.until(
+        #     EC.presence_of_element_located((By.XPATH, '//[@id="treeLoss"]/div[2]/div[2]')))
+        if(elinformations2):
+            # print("title LOSS: " + elinformations2.text) # uncomment if you want to see the text 
+            print(elinformations2.is_displayed())
+            
+        if(elinformations2):
+            # print("text LOSS: " + elinformations2_texto.text) # uncomment if you want to see the text 
+            print(elinformations2_texto.is_displayed())
+    except:
+        print("tree informations não existe.")
 
-    print("display: " + elinformations.is_displayed())
-    print("enable: " + elinformations.is_enabled())
-    print("text: " + elinformations.text)
-    print("parent: " + elinformations.parent)
+    finally:
+        pass
 
 
 # configs
-# driver = webdriver.Firefox(
-#     executable_path=r'D:\downloads\geckodriver-v0.30.0-win64\geckodriver.exe')
-driver = webdriver.Firefox()
+firefox_options = Options()
+firefox_options.add_argument("--headless")
+driver = webdriver.Firefox(
+    executable_path=r'D:\downloads\geckodriver-v0.30.0-win64\geckodriver.exe')
+
+# driver = webdriver.Firefox()
 driver.get("https://www.globalforestwatch.org/map/")
 driver.maximize_window()
 actions = ActionChains(driver)
-wait = WebDriverWait(driver, 10)
+wait = WebDriverWait(driver, 30)
 # define variables in localStorage
 driver.execute_script(
     "window.localStorage.setItem('agreeCookies','true');")
@@ -118,10 +142,4 @@ clickMapOnly()
 drawnInMap()
 
 clickMapOnly()
-# collectInformations()
-# pageSource = driver.page_source
-# fileTowrite = open("page_source.html","w");
-# fileTowrite.write(pageSource)
-# fileTowrite.close()
-# drawn_option = driver.find_element(
-#     By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[4]/div/div[2]/div/div[2]/button[2]')
+collectInformations()
