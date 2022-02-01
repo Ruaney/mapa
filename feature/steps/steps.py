@@ -5,15 +5,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from behave import *
+from webdriver_manager.firefox import GeckoDriverManager
+
 from time import sleep
 
 @given('Entro no site')
 def step_impl(context):    
-    context.driver = webdriver.Firefox(executable_path=r'C:\Users\joana\OneDrive\Área de Trabalho\projects\mapa\geckodriver.exe')
+    context.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
+    #context.driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+   
     context.actions = ActionChains(context.driver)
     context.wait = WebDriverWait(context.driver,30)
     context.driver.get("https://www.globalforestwatch.org/map/")    
-
+    context.driver.maximize_window()
 
 @when('defino as variaveis locais')
 def step_impl(context):
@@ -27,10 +31,13 @@ def step_impl(context):
 @when('recarrego a pagina')
 def step_impl(context):
     context.driver.refresh()
+    sleep(5)
+    
+    
   
 @when('configuro RADD')
 def step_impl(context):
-    sleep(3)
+    
     wait = context.wait
     menu_forest_change = wait.until(EC.presence_of_element_located(
     (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[1]/div/div/div/ul[1]/li[1]/button')))
@@ -39,9 +46,10 @@ def step_impl(context):
     menu_RADD = wait.until(EC.presence_of_element_located(
         (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[1]/div/div[2]/div/div/div[2]/div[4]/button')))
     menu_RADD.send_keys(Keys.ENTER)  
-    
+    sleep(5)
 @when('clico "botao de analise"')
 def step_impl(context):
+    
     wait = context.wait
     # elements analisis
     menu_analisis_button = wait.until(EC.presence_of_element_located(
@@ -59,6 +67,7 @@ def step_impl(context):
 @when('clico "botao de começar a desenhar"')
 def step_impl(context):
     wait = context.wait
+    sleep(5)
     
     try:
         start_drawn_option = wait.until(EC.presence_of_element_located(
@@ -69,6 +78,7 @@ def step_impl(context):
         # confirmando que realmente precisa clicar
         if(start_drawn_option.text == "FAÇA O DESENHO" or "START DRAWING"):
             start_drawn_option.send_keys(Keys.ENTER)
+            #context.actions.click(start_drawn_option).perform()
         else:
             pass
 
@@ -82,8 +92,6 @@ def step_impl(context):
 
 @when('em mostrar mapa somente')
 def step_impl(context):
-    sleep(5)
-    actions = context.actions
     wait = context.wait
     
     test = wait.until(EC.presence_of_element_located(
@@ -92,27 +100,23 @@ def step_impl(context):
 
 @when('desenho no mapa')
 def step_impl(context):
-    sleep(20)
     wait = context.wait
     driver = context.driver
     actions = context.actions
     elmap = wait.until(EC.presence_of_element_located(
         (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[3]/div/div/div/div/div/div[2]/div')))
     # first click
-    actions.move_to_element_with_offset(elmap, 150, 100).click().perform()
+    actions.move_to_element_with_offset(elmap, 200, 150).click().perform()
 
-    driver.implicitly_wait(1)
     # second click
-    actions.move_to_element_with_offset(elmap, 120, 50).click().perform()
-    driver.implicitly_wait(1)
-    # third click
-    actions.move_to_element_with_offset(elmap, 100, 50).double_click().perform()
-    driver.implicitly_wait(1)
-    # final click
-    """  actions.double_click().click().perform()
-    driver.implicitly_wait(1)  """
-    sleep(5)
+    actions.move_to_element_with_offset(elmap, 200, 50).click().perform()
     
+    # third click
+    actions.move_to_element_with_offset(elmap, 300, 50).click().perform()
+    sleep(3)
+    # final click
+    actions.double_click().perform()
+
     
 @when('clico "mostrar mapa somente"')
 def step_impl(context):
@@ -123,17 +127,15 @@ def step_impl(context):
     
 @then('verifica se as informações estão presentes')
 def step_impl(context):
-    sleep(15)
+    sleep(20)
     
     wait = context.wait
     # treeLossGain informations
-    """ treeLossGain = wait.until(
-        EC.presence_of_all_elements_located((By.XPATH,'/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[2]')))
-    """
     treeLossGain = wait.until(
-        EC.presence_of_all_elements_located((By.ID,'treeCoverGainSimple')))
-
-    assert treeLossGain.is_displayed()
+        EC.presence_of_all_elements_located((By.XPATH,'/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[2]')))
+    
+    for inf in treeLossGain:
+        assert inf.is_displayed()
     
     # tree Loss informations
     treeLoss = wait.until(
