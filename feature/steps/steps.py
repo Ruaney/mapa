@@ -9,7 +9,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 
 from time import sleep
 
-@given('Entro no site')
+@given('Entro no site globalforest')
 def step_impl(context):    
     context.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
     #context.driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
@@ -19,26 +19,16 @@ def step_impl(context):
     context.driver.get("https://www.globalforestwatch.org/map/")    
     context.driver.maximize_window()
 
-@when('defino as variaveis locais')
+@when('Configuro RADD no menu esquerdo opcao Forest Change')
 def step_impl(context):
     driver = context.driver
+    wait = context.wait 
     driver.execute_script(
         "window.localStorage.setItem('agreeCookies','true');")
     driver.execute_script(
         "window.localStorage.setItem('welcomeModalHidden','true');")
-
-
-@when('recarrego a pagina')
-def step_impl(context):
     context.driver.refresh()
     sleep(5)
-    
-    
-  
-@when('configuro RADD')
-def step_impl(context):
-    
-    wait = context.wait
     menu_forest_change = wait.until(EC.presence_of_element_located(
     (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[1]/div/div/div/ul[1]/li[1]/button')))
     menu_forest_change.send_keys(Keys.ENTER)
@@ -47,7 +37,8 @@ def step_impl(context):
         (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[1]/div/div[2]/div/div/div[2]/div[4]/button')))
     menu_RADD.send_keys(Keys.ENTER)  
     sleep(5)
-@when('clico "botao de analise"')
+    
+@when('Clico "botao de analise" presente ao lado do menu esquerdo')
 def step_impl(context):
     
     wait = context.wait
@@ -63,8 +54,7 @@ def step_impl(context):
     ))
     drawn_option.send_keys(Keys.ENTER)
 
-
-@when('clico "botao de começar a desenhar"')
+@when('Clico "botao de começar a desenhar ou fazer upload da forma"')
 def step_impl(context):
     wait = context.wait
     sleep(5)
@@ -81,24 +71,13 @@ def step_impl(context):
             #context.actions.click(start_drawn_option).perform()
         else:
             pass
-
-
-@when('verifico se o site deu erro')
-def step_impl(context):
     
-    if(context.driver.title == "An error occurred"):
-        context.driver.refresh()
-
-
-@when('em mostrar mapa somente')
-def step_impl(context):
-    wait = context.wait
     
-    test = wait.until(EC.presence_of_element_located(
+    buttonShowMap = wait.until(EC.presence_of_element_located(
         (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[5]/div/div[2]/div[1]/div[3]/button')))
-    test.send_keys(Keys.ENTER)    
+    buttonShowMap.send_keys(Keys.ENTER) 
 
-@when('desenho no mapa')
+@when('Desenho no mapa com base na long e lat')
 def step_impl(context):
     wait = context.wait
     driver = context.driver
@@ -117,16 +96,11 @@ def step_impl(context):
     # final click
     actions.double_click().perform()
 
-    
-@when('clico "mostrar mapa somente"')
+@then('Verifica se ganho/perda de cobertura arborea estão presentes')
 def step_impl(context):
-    
-    test = context.driver.find_element(
+    menuShowMap = context.driver.find_element(
         By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[4]/div/div/div[1]/div[3]/button')
-    test.send_keys(Keys.ENTER)
-    
-@then('verifica se as informações estão presentes')
-def step_impl(context):
+    menuShowMap.send_keys(Keys.ENTER)
     sleep(20)
     
     wait = context.wait
