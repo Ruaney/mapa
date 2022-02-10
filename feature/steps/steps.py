@@ -1,12 +1,8 @@
-from selenium import webdriver 
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import TimeoutException
 from behave import *
-from webdriver_manager.firefox import GeckoDriverManager
 from time import sleep
 import time
 
@@ -27,16 +23,11 @@ def configurarRADD(context):
         (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[1]/div/div[2]/div/div/div[2]/div[4]/button')))
     menu_RADD.send_keys(Keys.ENTER)  
     sleep(5)
-
+    
 @given('Entro no site globalforest')
 def step_impl(context):    
-    context.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
-    #context.driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
-   
-    context.actions = ActionChains(context.driver)
-    context.wait = WebDriverWait(context.driver,30)
     context.driver.get("https://www.globalforestwatch.org/map/")    
-    context.driver.maximize_window()
+
 
 @when('Configuro RADD no menu esquerdo opcao Forest Change')
 def step_impl(context):
