@@ -4,23 +4,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import TimeoutException
 from behave import *
 from webdriver_manager.firefox import GeckoDriverManager
-
 from time import sleep
+import time
 
-@given('Entro no site globalforest')
-def step_impl(context):    
-    context.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
-    #context.driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
-   
-    context.actions = ActionChains(context.driver)
-    context.wait = WebDriverWait(context.driver,30)
-    context.driver.get("https://www.globalforestwatch.org/map/")    
-    context.driver.maximize_window()
-
-@when('Configuro RADD no menu esquerdo opcao Forest Change')
-def step_impl(context):
+def configurarRADD(context):
     driver = context.driver
     wait = context.wait 
     driver.execute_script(
@@ -37,6 +27,20 @@ def step_impl(context):
         (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[1]/div/div[2]/div/div/div[2]/div[4]/button')))
     menu_RADD.send_keys(Keys.ENTER)  
     sleep(5)
+
+@given('Entro no site globalforest')
+def step_impl(context):    
+    context.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
+    #context.driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+   
+    context.actions = ActionChains(context.driver)
+    context.wait = WebDriverWait(context.driver,30)
+    context.driver.get("https://www.globalforestwatch.org/map/")    
+    context.driver.maximize_window()
+
+@when('Configuro RADD no menu esquerdo opcao Forest Change')
+def step_impl(context):
+    configurarRADD(context)
     
 @when('Clico "botao de analise" presente ao lado do menu esquerdo')
 def step_impl(context):
@@ -101,17 +105,23 @@ def step_impl(context):
     menuShowMap = context.driver.find_element(
         By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[4]/div/div/div[1]/div[3]/button')
     menuShowMap.send_keys(Keys.ENTER)
-    sleep(20)
+    
+    start = time.time()
     
     wait = context.wait
-    # treeLossGain informations
-    treeLossGain = wait.until(
-        EC.presence_of_all_elements_located((By.XPATH,'/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[2]')))
+    try:
+        treeLossGain = wait.until(
+        EC.presence_of_element_located((By.XPATH,'/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[2]')))
     
-    for inf in treeLossGain:
-        assert inf.is_displayed()
-    
-    # tree Loss informations
-    treeLoss = wait.until(
-        EC.presence_of_element_located((By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[1]')))
-    assert treeLoss.is_displayed()
+        for inf in treeLossGain:
+            assert inf.is_displayed()
+        
+        treeLoss = wait.until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[1]')))
+        assert treeLoss.is_displayed()
+    except TimeoutException:
+        print("tempo expirou")
+
+    end = time.time()
+    tot = end - start
+    print("demorou: ",tot)
