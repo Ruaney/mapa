@@ -2,3 +2,5 @@
 geckodriver.log
 test.py
 __pycache__/
+feature/mensagens_log.log
+feature/testfeat.feature
