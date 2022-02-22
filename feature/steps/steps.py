@@ -81,8 +81,6 @@ def step_impl(context):
     except TimeoutException as e:
         logging.critical(
             "tempo expirou, um provavel erro aconteceu no site. %s", e)
-        logging.critical("Um erro ocorreu no site")
-
         if(context.driver.title == " An error ocurred"):
             logging.critical("Um erro ocorreu no site")
 
@@ -112,7 +110,7 @@ def step_impl(context):
 @when('soluçao temporaria, para erro que acontece aqui')
 def step_impl(context):
     context.driver.refresh()
-    time.sleep(15)
+    time.sleep(10)
 
 
 @when('Desenho no mapa com base na long e lat')
@@ -140,22 +138,19 @@ def step_impl(context):
 @when('Coloco o arquivo com a forma')
 def upload_archive_with_form(context):
     wait = context.wait
+    localRelative = r"\shapes\fp_MS_atualizado_r2_idade_rev_clayton.zip"
+    archive = os.getcwd()+localRelative
+    logging.info("local do arquivo: %s", archive)
     try:
-        localRelative = r"\shapes\fp_MS_atualizado_r2_idade_rev_clayton.zip"
-        archive = os.getcwd()+localRelative
-        logging.info("local do arquivo: %s", archive)
         uploadArchiveElement = wait.until(EC.presence_of_element_located(
             (By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[3]/div[3]/input')))
-        uploadArchiveElement.send_keys(archive)       
+        uploadArchiveElement.send_keys(archive)
+
     except TimeoutException as e:
         logging.warning("Um Erro aconteceu, tempo expirou {}".format(e))
-    
-    #tempo pra carregar o arquivo zip
-    time.sleep(10)
 
 @then('Verifica se ganho/perda de cobertura arborea estão presentes')
 def step_impl(context):
-     
     start = time.time()
     wait = context.wait
 
@@ -164,7 +159,7 @@ def step_impl(context):
             By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[4]/div/div/div[1]/div[3]/button')
         menuShowMap.send_keys(Keys.ENTER)
     except NoSuchElementException:
-        logging.info("elemento não localizado, erro aconteceu no site.")
+        logging.info("elemento de mostrar somente o mapa não localizado.")
 
     try:
         treeLossGain = wait.until(
@@ -172,30 +167,33 @@ def step_impl(context):
 
         if(hasattr(treeLossGain, '__iter__')):
             for inf in treeLossGain:
-                logging.info("Informação Ganho de cobertura: %s", inf.text)
-
+                logging.info(
+                    "Apenas para checar. {}".format(inf.text))
+                assert inf.is_displayed()
         elif(treeLossGain):
-            logging.info("Infor pra Ganho de cobertura: %s", treeLossGain.text)
+            logging.info(
+                "Apenas para checar.  {}".format(treeLossGain.text))
+            assert treeLossGain.is_displayed()
 
-        assert inf.is_displayed()
+    except TimeoutException:
+        logging.info(
+            'Não foi possivel verificar o ganho de cobertura arborea')
 
+    try:
         treeLoss = wait.until(
             EC.presence_of_element_located((By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[1]')))
 
         assert treeLoss.is_displayed()
-
         if(treeLoss):
-            logging.info("deveria ter aparecido treeLoss")
-            logging.info("Informações Perda de cobertura: %s", treeLoss.text)
-
+            logging.info(
+                "Informações Perda de cobertura: {}".format(treeLoss.text))
+        end = time.time()
+        tot = end - start
+        logging.info("demorou %d segundos para verificar o ganho/perda de cobertura. ", tot)
     except TimeoutException:
         logging.info(
-            'Não foi possivel verificar o ganho/perda de cobertura arborea')
+            'Não foi possivel verificar a perda de cobertura arborea')
 
-    end = time.time()
-    tot = end - start
-    logging.info("demorou segundos: ", tot)
-    time.sleep(5)
     context.driver.quit()
 
 # @then('Verifico se ganho/perda de cobertura arborea estão presentes')
