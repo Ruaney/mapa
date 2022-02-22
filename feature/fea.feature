@@ -23,4 +23,12 @@ Funcionalidade: Consultar Ganho/Perda de cobertura arbôrea de uma área
         E Desenho no mapa com base na long e lat
       Entao Verifica se ganho/perda de cobertura arborea estão presentes
 
+    Cenario: Informaçoes presentes? com base em no upload de um shape
+        Dado Entro no site globalforest (com interface grafica)  
+        Quando Configuro RADD no menu esquerdo opcao Forest Change
+            E Clico botao de analise presente ao lado do menu esquerdo 
+            E soluçao temporaria, para erro que acontece aqui
+            E Coloco o arquivo com a forma
+        Entao Verifica se ganho/perda de cobertura arborea estão presentes
+
    
