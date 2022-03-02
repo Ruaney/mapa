@@ -5,3 +5,5 @@
 1. na pasta do projeto rode no terminal ``pip install -r requirements.txt``
 2. entre na pasta feature ``cd feature``
 3. rode o comando no terminal ``behave`` .
+
+OBS: se quiser debuggar rode `behave --no-capture`

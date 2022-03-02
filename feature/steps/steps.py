@@ -1,5 +1,6 @@
 
 from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -12,7 +13,7 @@ from behave import *
 import time
 import logging
 import os
-
+import pdb
 logging.basicConfig(filename='mensagens_log.log',
                     filemode='w', encoding='utf-8', level=logging.INFO)
 logging.info("init arquivo")
@@ -25,7 +26,7 @@ def entrarSite(context, interface):
         firefoxOptions.add_argument("--headless")
 
     context.driver = context.webdriver.Firefox(
-        executable_path=GeckoDriverManager().install(), options=firefoxOptions)
+        service=Service(GeckoDriverManager().install()), options=firefoxOptions)
     context.actions = ActionChains(context.driver)
     context.wait = WebDriverWait(context.driver, 15)
     context.driver.get("https://www.globalforestwatch.org/map")
@@ -41,7 +42,6 @@ def step_impl(context):
 @given('Entro no site globalforest (sem interface grafica)')
 def step_impl(context):
     entrarSite(context, False)
-
 
 @when('Configuro RADD no menu esquerdo opcao Forest Change')
 def step_impl(context):
@@ -78,9 +78,9 @@ def step_impl(context):
         ))
         drawn_option.send_keys(Keys.ENTER)
 
-    except TimeoutException as e:
-        logging.critical(
-            "tempo expirou, um provavel erro aconteceu no site. %s", e)
+    except TimeoutException:
+        logging.exception(
+            "tempo expirou, um provavel erro aconteceu no site. ")
         if(context.driver.title == " An error ocurred"):
             logging.critical("Um erro ocorreu no site")
 
@@ -102,7 +102,7 @@ def step_impl(context):
             (By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[5]/div/div[2]/div[1]/div[3]/button')))
         buttonShowMap.send_keys(Keys.ENTER)
     except (StaleElementReferenceException, TimeoutException):
-        logging.info("Botão não localizado.")
+        logging.exception("Botão não localizado.")
         if(context.driver.title == "An error ocurred"):
             logging.critical("Um erro ocorreu no site")
 
@@ -132,7 +132,7 @@ def step_impl(context):
         # final click
         actions.double_click().perform()
     except TimeoutException:
-        logging.info('Não foi possivel localizar o mapa para desenhar.')
+        logging.exception('Não foi possivel localizar o mapa para desenhar.')
 
 
 @when('Coloco o arquivo com a forma')
@@ -145,9 +145,8 @@ def upload_archive_with_form(context):
         uploadArchiveElement = wait.until(EC.presence_of_element_located(
             (By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[3]/div[3]/input')))
         uploadArchiveElement.send_keys(archive)
-
     except TimeoutException as e:
-        logging.warning("Um Erro aconteceu, tempo expirou {}".format(e))
+        logging.exception("Um Erro aconteceu, tempo expirou {}".format(e))
 
 @then('Verifica se ganho/perda de cobertura arborea estão presentes')
 def step_impl(context):
@@ -155,47 +154,123 @@ def step_impl(context):
     wait = context.wait
 
     try:
-        menuShowMap = context.driver.find_element(
+        menu_show_map = context.driver.find_element(
             By.XPATH, '//*[@id="__next"]/div/div[2]/div/div[4]/div/div/div[1]/div[3]/button')
-        menuShowMap.send_keys(Keys.ENTER)
+        menu_show_map.send_keys(Keys.ENTER)
     except NoSuchElementException:
-        logging.info("elemento de mostrar somente o mapa não localizado.")
+        logging.exception("elemento de mostrar somente o mapa não localizado.")
 
     try:
-        treeLossGain = wait.until(
+        tree_loss_gain = wait.until(
             EC.presence_of_element_located((By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[2]')))
 
-        if(hasattr(treeLossGain, '__iter__')):
-            for inf in treeLossGain:
+        if(hasattr(tree_loss_gain, '__iter__')):
+            for inf in tree_loss_gain:
                 logging.info(
                     "Apenas para checar. {}".format(inf.text))
                 assert inf.is_displayed()
-        elif(treeLossGain):
+        elif(tree_loss_gain):
             logging.info(
-                "Apenas para checar.  {}".format(treeLossGain.text))
-            assert treeLossGain.is_displayed()
+                "Apenas para checar.  {}".format(tree_loss_gain.text))
+            assert tree_loss_gain.is_displayed()
 
     except TimeoutException:
-        logging.info(
+        logging.exception(
             'Não foi possivel verificar o ganho de cobertura arborea')
 
     try:
-        treeLoss = wait.until(
+        tree_loss = wait.until(
             EC.presence_of_element_located((By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[1]')))
 
-        assert treeLoss.is_displayed()
-        if(treeLoss):
+        assert tree_loss.is_displayed()
+        if(tree_loss):
             logging.info(
-                "Informações Perda de cobertura: {}".format(treeLoss.text))
+                "Informações Perda de cobertura: {}".format(tree_loss.text))
+            
         end = time.time()
         tot = end - start
+
         logging.info("demorou %d segundos para verificar o ganho/perda de cobertura. ", tot)
     except TimeoutException:
-        logging.info(
+        logging.exception(
+            'Não foi possivel verificar a perda de cobertura arborea')
+    
+    context.driver.quit()
+
+@then('Verifica se ganho/perda de cobertura arborea estão presentes com base em um shape')
+def step_impl(context):
+    wait = context.wait
+    driver = context.driver
+    actions = context.actions
+    time.sleep(15)
+
+    # try:
+    #     tree_loss_gain = wait.until(
+    #         EC.presence_of_element_located((By.XPATH, '/html/body/main/div/div/div[2]/div/div[4]/div/div[2]/div/div[1]/div[3]/div[1]/div[2]')))
+
+    #     if(hasattr(tree_loss_gain, '__iter__')):
+    #         for inf in tree_loss_gain:
+    #             logging.info(
+    #                 "Apenas para checar. {}".format(inf.text))
+    #             assert inf.is_displayed()
+    #     elif(tree_loss_gain):
+    #         logging.info(
+    #             "Apenas para checar.  {}".format(tree_loss_gain.text))
+    #         assert tree_loss_gain.is_displayed()
+
+    # except TimeoutException:
+    #     logging.exception(
+    #         'Não foi possivel verificar o ganho de cobertura arborea')
+
+    try:
+        tree_loss = wait.until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="treeLoss"]/div[2]/div[1]')))
+
+        assert tree_loss.is_displayed() == True
+        
+        if(tree_loss):
+            logging.info(
+                "Informações Perda de cobertura: {}".format(tree_loss.text))
+            list_temp = []
+            locale_string = tree_loss.text.find('2')
+            string_year = tree_loss.text[(locale_string-1):(locale_string+11)]
+            list_year = string_year.split(' ')
+            year_begin = int(list_year[0])
+            year_end = int(list_year[2])
+            tot_moves = year_end - year_begin # quantas vezes vou ter que mover o mouse para pegar informaçoes de perda de cobertura no gráfico.
+            
+            try:
+                graphic_loss = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="treeLoss"]/div[2]/div[2]/div/div/div[1]/svg/g[2]/g/g[1]')))
+                
+                #para pegar a primeira informação do grafico de perda de cobertura
+                temp_value_ini = 10
+                for x in range(1,tot_moves):
+                    actions.move_to_element_with_offset(graphic_loss,(temp_value_ini*x),1) # move o mouse para direita de acordo com o valor de x
+                    year_loss = driver.find_element(By.XPATH,'//*[@id="treeLoss"]/div[2]/div[2]/div/div/div[1]/div/div/div/div[1]/div') #ano do grafico
+                    if(year_loss == year_passed):
+                        continue
+                    list_temp.append(year_loss.text)
+                    loss_roof_hect = driver.find_element(By.XPATH, '//*[@id="treeLoss"]/div[2]/div[2]/div/div/div[1]/div/div/div/div[2]/div[2]') #hectares perdidos
+                    list_temp.append(loss_roof_hect.text)
+                    year_passed = year_loss.text
+                pdb.set_trace()
+                    
+            except TimeoutException:
+                logging.exception('não foi possivel localizar o gráfico de perda de cobertura arborea.')
+                
+
+        #vou ter que pegar aqui o ano de inicio e fim no texto que vai ta dentro de
+        #treeLoss, dai vou ter inicio e fim para poder saber quantas vezes vou ter que mover o mouse em cima do grafico
+        #para pegar as informações de perda de cobertura dos anos e pegar o grafico
+        #pelo XPATH e mover o mouse para ir aparecendo as informaçoes e ao mesmo tempo
+        # atualizar uma variavel para armazenar valores temporariamente. 
+        #Posso mover o mouse com actions.move_to_element_with_offset(variavel,10,1) -- começo em 10,1 
+        #depois vou movendo de 10 em 10
+        # do 150 para 160 o ano nao se alterou, vou ter que verificar se o ano se altera em 1 para continuar se nao jogar um erro
+        
+    except TimeoutException:
+        logging.exception(
             'Não foi possivel verificar a perda de cobertura arborea')
 
     context.driver.quit()
 
-# @then('Verifico se ganho/perda de cobertura arborea estão presentes')
-# def step_impl(context):
-#     pass
